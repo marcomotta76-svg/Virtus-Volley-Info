@@ -1,0 +1,67 @@
+name: Pubblica Volley Info Virtus Caserta
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '13 */3 * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: virtus-volley-info-pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Prepara il sito per GitHub Pages
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check -r importer/requirements.txt pillow
+          mkdir -p public/icons public/logos
+          cp index.html app.js style.css source_adapter.js sw.js manifest.webmanifest data.json public/
+          cp logos/virtus_caserta_original.png public/logos/
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          source=Image.open('icons/icon-source.png').convert('RGBA')
+          icons=Path('public/icons')
+          for size,name in [(192,'icon-192.png'),(512,'icon-512.png'),(180,'apple-touch.png')]:
+              source.resize((size,size),Image.Resampling.LANCZOS).save(icons/name,optimize=True)
+          mask=Image.new('RGBA',(512,512),'#0b142a')
+          scaled=source.resize((385,385),Image.Resampling.LANCZOS)
+          mask.alpha_composite(scaled,((512-385)//2,(512-385)//2))
+          mask.save(icons/'icon-maskable-512.png',optimize=True)
+          PY
+
+      - name: Aggiorna il feed FIPAV
+        shell: bash
+        run: |
+          if python importer/sync.py --output public/data.json; then
+            echo "Feed FIPAV acquisito."
+          else
+            echo "::warning::Fonte FIPAV temporaneamente non raggiungibile. Resta l'ultima copia validata nel repository."
+          fi
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
