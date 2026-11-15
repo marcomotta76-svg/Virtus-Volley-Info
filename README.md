@@ -1,33 +1,48 @@
-# Volley Info — Virtus Caserta (prova pubblica)
+# Virtus Caserta — Volley Info
 
-PWA informativa per Android, iOS e desktop. Grafica con logo app scelto (opzione 1) e stemma originale Virtus per le squadre del club.
+Applicazione informativa installabile su Android e iPhone (PWA), stagione 2026/27.
+
+## Funzionalità
+
+- Home con prossima partita, risultati recenti e squadra preferita.
+- Ricerca squadre Virtus e avversarie nei campionati seguiti.
+- Calendario per squadra e campionato; schede delle gare con parziali e palestre.
+- Classifiche FIPAV ufficialmente pubblicate.
+- Consultazione offline degli ultimi dati salvati; nessun account richiesto.
+
+La grafica utilizza l'icona Volley Info selezionata (opzione 1) e lo stemma Virtus originale fornito, ottimizzati in versioni leggere per le schermate dei cellulari.
 
 ## Pubblicazione su GitHub Pages
 
-1. Creare un **nuovo repository pubblico** dedicato, ad esempio `volley-info-virtus-caserta`.
-2. Caricare i file e le cartelle di questo pacchetto **alla radice** del repository, preservando `.github/workflows/pages.yml`.
-3. In **Settings → Pages → Build and deployment**, selezionare **Source: GitHub Actions**.
-4. Aprire la sezione **Actions** e verificare che il workflow "Pubblica Volley Info Virtus Caserta" sia terminato correttamente.
-5. La pagina sarà all'indirizzo indicato in **Settings → Pages** (tipicamente `https://<account>.github.io/volley-info-virtus-caserta/`).
+Repository: https://github.com/marcomotta76-svg/Virtus-Volley-Info
 
-### Installazione Android
-Chrome → aprire il sito HTTPS → menu ⋮ → "Installa app" / "Aggiungi alla schermata Home".
+1. Se si utilizza GitHub Free, rendere **pubblico** il repository tramite **Settings → General → Danger Zone → Change repository visibility**.
+2. Aprire **Settings → Pages** e impostare **Build and deployment → Source: GitHub Actions**.
+3. Aprire **Actions → Pubblica Volley Info Virtus Caserta** e fare **Run workflow**, oppure pubblicare una modifica su main.
+4. Dopo la conclusione positiva, l'app sarà raggiungibile tramite l'URL mostrato da GitHub Pages (normalmente https://marcomotta76-svg.github.io/Virtus-Volley-Info/).
 
-### Installazione iPhone
-Safari → Condividi → Aggiungi alla schermata Home.
+Se GitHub Pages è già abilitato con un piano che consente repository privati, si può mantenere quella visibilità, tenendo presente che l'URL del sito e i contenuti pubblicati possono comunque essere accessibili pubblicamente.
 
-## Aggiornamento dei dati
+## Installazione sul cellulare
 
-La pubblicazione iniziale e i successivi aggiornamenti programmati ogni 3 ore eseguono l'importatore Python. Il sistema:
-- legge il feed pubblico indipendente `https://kushnirandriy-droid.github.io/app-pallavolo/data.json`, basato su FIPAV Caserta e Campania;
-- prova a completare i 7 gironi provinciali dove il feed iniziale contiene solo le gare Virtus;
-- genera `public/data.json` con la data di aggiornamento della fonte;
-- non incorpora risultati inventati o dati di test.
+Android: aprire il sito con Chrome → menu ⋮ → Installa app / Aggiungi a schermata Home.
 
-Se il collegamento remoto è temporaneamente indisponibile, la PWA prova a interrogare il feed pubblico nel browser e conserva gli ultimi dati validi già letti. Il pulsante aggiorna **non è un live score**. L'operatività del job dipende dalla disponibilità dei siti pubblici e dalla pianificazione best-effort di GitHub Actions.
+iPhone: aprire con Safari → Condividi → Aggiungi alla schermata Home.
 
-## Limiti
+## Dati
 
-Il software dipende dai siti FIPAV e da un feed pubblico indipendente. Nei gironi non completamente acquisiti, la ricerca delle avversarie può mostrare solo una parte degli incontri; le classifiche restano quelle della fonte. Non c'è un pannello di inserimento manuale né notifiche push.
+Lo script `importer/sync.py` legge il feed pubblico indipendente `https://kushnirandriy-droid.github.io/app-pallavolo/data.json`, i cui dati derivano dai portali FIPAV Caserta e Campania. Il workflow `.github/workflows/pages.yml` tenta di aggiornarli ogni tre ore. Se il feed non risponde, la pubblicazione conserva la copia già validata nel repository; l'app mantiene una cache locale.
 
-I loghi avversari vengono visualizzati quando disponibili. Solo lo stemma Virtus fornito è incorporato.
+Fotografia iniziale importata: 9 campionati/gironi che coinvolgono Virtus Caserta, 60 squadre e 246 gare. Data della fotografia: 15/11/2026 22:41 (ora italiana). **Sette gironi** hanno un calendario parziale delle avversarie, esplicitamente segnalato nell'app. Non sono presenti dati inventati.
+
+I risultati visualizzati non sono punteggi live e possono arrivare in ritardo rispetto alla partita.
+
+## Sviluppo
+
+- `index.html`, `app.js`, `style.css`: applicazione mobile-first.
+- `source_adapter.js`: conversione di emergenza dal feed pubblico via browser.
+- `data.json`: ultima fotografia valida.
+- `sw.js`, `manifest.webmanifest`: installazione e cache offline.
+- `icons/icon-source.png`: icona base della PWA; GitHub Actions genera le dimensioni richieste.
+- `logos/virtus_caserta_original.png`: stemma Virtus per le squadre.
+- `importer/sync.py`: acquisizione e conversione del feed.
