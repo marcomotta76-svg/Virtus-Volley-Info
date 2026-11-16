@@ -34,6 +34,19 @@ jobs:
           python -m pip install requests beautifulsoup4
           python importer/probe.py
 
+      - name: Test collezione diretta di 9 gironi FIPAV
+        continue-on-error: true
+        timeout-minutes: 18
+        shell: bash
+        run: |
+          python -m pip install beautifulsoup4 requests
+          python -u importer/direct.py --output /tmp/virtus-direct-test.json --previous /tmp/nonexistent.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/virtus-direct-test.json'))
+          print('Diretta:',len(d['competitions']),'gironi',len(d['matches']),'gare',len(d['teams']),'squadre, method:',d['provenance']['method'])
+          PY
+
       - name: Prepara il sito per GitHub Pages
         shell: bash
         run: |
