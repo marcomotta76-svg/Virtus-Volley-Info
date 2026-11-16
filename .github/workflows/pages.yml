@@ -64,6 +64,11 @@ jobs:
           print("Confermato:",len(p["matches"]),"gare dirette FIPAV, nessun feed di terzi")
           PY
 
+      - name: Recupera e valida i loghi delle squadre
+        timeout-minutes: 6
+        run: |
+          python -u importer/logos.py public/data.json
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
