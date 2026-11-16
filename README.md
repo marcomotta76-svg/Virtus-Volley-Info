@@ -1,48 +1,43 @@
 # Virtus Caserta — Volley Info
 
-Applicazione informativa installabile su Android e iPhone (PWA), stagione 2026/27.
+App informativa installabile su Android e iPhone (PWA), dedicata esclusivamente a Virtus Caserta e alle sue avversarie.
 
-## Funzionalità
+## Come aprirla sul telefono
 
-- Home con prossima partita, risultati recenti e squadra preferita.
-- Ricerca squadre Virtus e avversarie nei campionati seguiti.
-- Calendario per squadra e campionato; schede delle gare con parziali e palestre.
-- Classifiche FIPAV ufficialmente pubblicate.
-- Consultazione offline degli ultimi dati salvati; nessun account richiesto.
+[Apri Volley Info](https://marcomotta76-svg.github.io/Virtus-Volley-Info/).
 
-La grafica utilizza l'icona Volley Info selezionata (opzione 1) e lo stemma Virtus originale fornito, ottimizzati in versioni leggere per le schermate dei cellulari.
+- Android (Chrome): menu ⋮ → Installa app / Aggiungi a schermata Home.
+- iPhone (Safari): Condividi → Aggiungi alla schermata Home.
 
-## Pubblicazione su GitHub Pages
+La PWA include Home, ricerca di tutte le squadre nei gironi seguiti, scelta della squadra Virtus preferita, calendari, risultati, classifiche, dettagli delle gare e navigazione alle palestre.
 
-Repository: https://github.com/marcomotta76-svg/Virtus-Volley-Info
+## Acquisizione autonoma FIPAV
 
-1. Se si utilizza GitHub Free, rendere **pubblico** il repository tramite **Settings → General → Danger Zone → Change repository visibility**.
-2. Aprire **Settings → Pages** e impostare **Build and deployment → Source: GitHub Actions**.
-3. Aprire **Actions → Pubblica Volley Info Virtus Caserta** e fare **Run workflow**, oppure pubblicare una modifica su main.
-4. Dopo la conclusione positiva, l'app sarà raggiungibile tramite l'URL mostrato da GitHub Pages (normalmente https://marcomotta76-svg.github.io/Virtus-Volley-Info/).
+**Non utilizza feed di terzi, né il feed dell'app Kushnir.**
 
-Se GitHub Pages è già abilitato con un piano che consente repository privati, si può mantenere quella visibilità, tenendo presente che l'URL del sito e i contenuti pubblicati possono comunque essere accessibili pubblicamente.
+Il sistema `importer/direct.py` legge direttamente:
+- [FIPAV Caserta](https://caserta.portalefipav.net/), calendari completi e classifiche di otto gironi provinciali.
+- [FIPAV Campania](https://www.fipavcampania.it/mobile/), calendario, classifica e pagine di dettaglio della Serie D femminile, girone C.
 
-## Installazione sul cellulare
+Il workflow `.github/workflows/pages.yml` aggiorna il sito automaticamente ogni tre ore, con controllo del formato e della coerenza dei dati. Se una fonte non risponde o un girone risulta illeggibile, il workflow fallisce e **non sostituisce la copia valida già pubblicata**.
 
-Android: aprire il sito con Chrome → menu ⋮ → Installa app / Aggiungi a schermata Home.
+Le date e i parziali del campionato regionale provengono direttamente dalle pagine delle gare; quando disponibili vengono riutilizzati dalla precedente copia **già acquisita autonomamente** per limitare le richieste.
 
-iPhone: aprire con Safari → Condividi → Aggiungi alla schermata Home.
+Un giro diretto completo di test del 16 novembre 2026 ha trovato 9 gironi, 60 squadre, 400 gare e 156 date regionali. Altri campionati richiedono un aggiornamento della configurazione per le stagioni successive.
 
-## Dati
+**I dati non sono punteggi live.** Una partita non viene considerata conclusa solo perché è trascorso l'orario d'inizio.
 
-Lo script `importer/sync.py` legge il feed pubblico indipendente `https://kushnirandriy-droid.github.io/app-pallavolo/data.json`, i cui dati derivano dai portali FIPAV Caserta e Campania. Il workflow `.github/workflows/pages.yml` tenta di aggiornarli ogni tre ore. Se il feed non risponde, la pubblicazione conserva la copia già validata nel repository; l'app mantiene una cache locale.
+## Struttura
 
-Fotografia iniziale importata: 9 campionati/gironi che coinvolgono Virtus Caserta, 60 squadre e 246 gare. Data della fotografia: 15/11/2026 22:41 (ora italiana). **Sette gironi** hanno un calendario parziale delle avversarie, esplicitamente segnalato nell'app. Non sono presenti dati inventati.
+- `index.html`, `app.js`, `style.css`: interfaccia mobile-first.
+- `manifest.webmanifest`, `sw.js`: installazione e cache offline.
+- `logos/` e `icons/`: stemma Virtus e icona Volley Info (proposta 1).
+- `importer/direct.py`: scraper autonomo, validazione, import e conservazione dei dati.
+- `importer/probe.py`: test diagnostico delle due fonti ufficiali.
+- `data.json`: ultima fotografia pubblicata verificata; la provenienza deve avere `method: direct-fipav`.
 
-I risultati visualizzati non sono punteggi live e possono arrivare in ritardo rispetto alla partita.
+## Limiti e rispetto delle fonti
 
-## Sviluppo
+L'importazione dipende dai portali ufficiali FIPAV, che possono modificare il formato delle pagine. Le richieste sono sequenziali e limitate; non sono effettuate da ogni smartphone. La classifica è letta dai siti FIPAV, non ricalcolata da dati eventualmente incompleti.
 
-- `index.html`, `app.js`, `style.css`: applicazione mobile-first.
-- `source_adapter.js`: conversione di emergenza dal feed pubblico via browser.
-- `data.json`: ultima fotografia valida.
-- `sw.js`, `manifest.webmanifest`: installazione e cache offline.
-- `icons/icon-source.png`: icona base della PWA; GitHub Actions genera le dimensioni richieste.
-- `logos/virtus_caserta_original.png`: stemma Virtus per le squadre.
-- `importer/sync.py`: acquisizione e conversione del feed.
+L'app non richiede login, non contiene chat, convocazioni, registrazioni o scouting.
