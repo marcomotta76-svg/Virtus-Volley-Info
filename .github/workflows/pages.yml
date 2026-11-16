@@ -33,11 +33,14 @@ jobs:
       - name: Installa dipendenze
         run: python -m pip install --disable-pip-version-check requests beautifulsoup4 pillow
 
+      - name: Verifica calendario Home e fuso italiano
+        run: node --test tests/home-week.test.cjs
+
       - name: Prepara gli asset della PWA
         shell: bash
         run: |
           mkdir -p public/icons public/logos
-          cp index.html app.js style.css sw.js manifest.webmanifest public/
+          cp index.html app.js week.js style.css sw.js manifest.webmanifest public/
           cp logos/virtus_caserta_original.png public/logos/
           python - <<'PY'
           from PIL import Image
