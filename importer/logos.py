@@ -13,6 +13,8 @@ import requests
 from PIL import Image, UnidentifiedImageError
 
 BASE="https://caserta.portalefipav.net"
+# Stemmi caricati direttamente dall\'utente: conservarli nel repository.
+MANUAL_LOGOS={"ALPNORMANNA AVERSA":"logos/manual/alpnormanna-aversa.webp"}
 # Associazioni identificate sul portale ufficiale: ID della SOCIETA, non del team.
 # Fonte: https://caserta.portalefipav.net/elenco-societa.aspx?ComitatoId=19&PId=7267&SId={id}
 REGIONAL_ASSOCIATIONS={
@@ -55,6 +57,11 @@ def main(path):
     logos_by_sid={}
     found=missing=0
     for team in data["teams"]:
+        manual=MANUAL_LOGOS.get(team["name"].strip().upper())
+        if manual and (p.parent/manual).is_file():
+            team["logo"]=manual
+            found+=1
+            continue
         if team.get("isVirtus"):
             team["logo"]="logos/virtus_caserta_original.png"
             continue

@@ -41,7 +41,7 @@ jobs:
         run: |
           mkdir -p public/icons public/logos
           cp index.html app.js week.js style.css sw.js manifest.webmanifest public/
-          cp logos/virtus_caserta_original.png public/logos/
+          cp -R logos/. public/logos/
           python - <<'PY'
           from PIL import Image
           from pathlib import Path
