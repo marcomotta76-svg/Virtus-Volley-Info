@@ -42,3 +42,16 @@ test("Prossima gara preferita e sempre futura, anche la settimana dopo",()=>{
  assert.equal(week.nextFavoriteMatch(data,"v1","2026-11-18T11:00:00Z").id,"fav-involved");
  assert.equal(week.nextFavoriteMatch(data,"v1","2026-11-25T11:00:00Z"),null);
 });
+
+test("Home mostra tutte le partite Virtus, inclusa la preferita, anche quelle giocate",()=>{
+ const result=week.allVirtusMatches(data,week.currentWeek("2026-11-18T08:00:00Z"));
+ assert.deepEqual(result.map(g=>g.id),["v2s","two-virtus","fav-involved","f2","v3s"]);
+ assert.deepEqual(result.find(g=>g.id==="v2s").score,[3,1]);
+ assert.equal(result.some(g=>g.id==="non-virtus"),false);
+ assert.equal(result.some(g=>g.id==="next-week"),false);
+});
+test("La stessa gara tra due squadre Virtus compare una sola volta",()=>{
+ const repeated={...data,matches:[...data.matches,{...data.matches.find(m=>m.id==="two-virtus")}]};
+ const result=week.allVirtusMatches(repeated,week.currentWeek("2026-11-18T08:00:00Z"));
+ assert.equal(result.filter(g=>g.id==="two-virtus").length,1);
+});

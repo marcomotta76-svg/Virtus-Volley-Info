@@ -1,5 +1,5 @@
 "use strict";
-const S={data:null,teamMap:new Map(),compMap:new Map(),matchMap:new Map(),venueMap:new Map(),favorite:null,calendar:{team:"all",comp:"all",range:"all"},standings:{comp:null},searchOpen:false,loading:false,selected:null};
+const S={data:null,teamMap:new Map(),compMap:new Map(),matchMap:new Map(),venueMap:new Map(),favorite:null,calendar:{team:"all",comp:"all",range:"all"},standings:{comp:null},searchOpen:false,favoritePicker:false,loading:false,selected:null};
 const KEY_FAVORITE="virtus-info-favorite-v1",KEY_DATA="virtus-info-valid-data-v1";
 const $=q=>document.querySelector(q);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -57,28 +57,28 @@ function matchRow(m,tag=true){
  return '<a class="match-row" href="'+route("match",m.id)+'"><div class="row-top"><span>'+esc(tag?c.short:"Giornata "+(m.round||"—"))+'</span><span>'+esc(day(m.datetime))+'</span></div><div class="match-body"><div class="match-team">'+iconTeam(a.id)+'<span>'+esc(a.name)+'</span></div><div class="match-center">'+(isPlayed(m)?esc(m.score.join(" – ")):'<small>'+esc(time(m.datetime))+'</small>')+'</div><div class="match-team">'+iconTeam(b.id)+'<span>'+esc(b.name)+'</span></div></div></a>';
 }
 function pageSection(title,body,link){return '<div class="section-title"><h2>'+title+'</h2>'+(link?'<a href="'+link+'">Vedi tutti</a>':"")+'</div>'+body}
-function favSection(){
- const t=team(S.favorite);return '<div class="card"><div class="fav-line"><div><p class="eyebrow">LA MIA SQUADRA</p><h2 style="font-size:19px;margin:7px 0">'+esc(t.name)+'</h2><p class="intro">'+esc(competition(t.competitionIds?.[0]).short)+'</p></div><button class="action-button secondary" id="change-favorite">Cambia</button></div><a class="inline-button" href="'+route("team",t.id)+'">Apri la scheda della squadra →</a></div>'
-}
+
 function home(){
  const favorite=S.favorite&&S.teamMap.has(S.favorite)?S.favorite:null;
  const selected=favorite?team(favorite):null;
  const week=VirtusWeek.currentWeek(new Date());
  const next=VirtusWeek.nextFavoriteMatch(S.data,favorite,new Date());
- const others=VirtusWeek.otherVirtusMatches(S.data,favorite,week);
- let out='<div class="eyebrow">STAGIONE '+esc(S.data.season)+'</div><h1 class="page-title">Le partite Virtus</h1><p class="intro">La prossima partita della squadra preferita, poi gli incontri delle altre squadre Virtus nella settimana corrente.</p>';
- out+='<div class="section-title"><h2>Prossima partita'+(selected?' · '+esc(competition(selected.competitionIds?.[0]).short):'')+'</h2></div>';
+ const games=VirtusWeek.allVirtusMatches(S.data,week);
+ let out='<section class="hero home-feature" aria-label="Squadra preferita e prossima gara">';
+ out+='<div class="home-feature-toolbar"><div class="home-feature-meta"><span class="home-feature-kicker">LA MIA SQUADRA</span>'+(selected?'<span class="home-feature-category">'+esc(competition(selected.competitionIds?.[0]).short)+'</span>':'')+'</div><button type="button" class="home-change-button" id="change-favorite" aria-label="Cambia squadra preferita">Cambia squadra</button></div>';
  if(next){
-   const a=team(next.homeId),b=team(next.awayId),comp=competition(next.competitionId);
-   out+='<a class="hero" style="display:block" href="'+route("match",next.id)+'"><div class="hero-heading"><span>LA MIA SQUADRA</span><span>'+esc(comp.short)+'</span></div><div class="hero-teams"><div class="hero-team">'+bigIcon(a.id)+'<span>'+esc(a.name)+'</span></div><div class="versus">VS</div><div class="hero-team">'+bigIcon(b.id)+'<span>'+esc(b.name)+'</span></div></div><div class="detail center">'+esc(dayLong(next.datetime))+' · '+esc(time(next.datetime))+'</div><div class="detail center">'+esc(venue(next.venueId)?.name||"Palestra da definire")+'</div></a>';
- }else out+='<div class="empty">Nessuna prossima partita programmata per la squadra preferita.</div>';
- out+=favSection();
+   const a=team(next.homeId),b=team(next.awayId);
+   out+='<a class="home-feature-link" href="'+route("match",next.id)+'" aria-label="Apri la prossima gara"><div class="hero-teams"><div class="hero-team">'+bigIcon(a.id)+'<span>'+esc(a.name)+'</span></div><div class="versus">VS</div><div class="hero-team">'+bigIcon(b.id)+'<span>'+esc(b.name)+'</span></div></div><div class="detail center">'+esc(dayLong(next.datetime))+' · '+esc(time(next.datetime))+'</div><div class="detail center">'+esc(venue(next.venueId)?.name||"Palestra da definire")+'</div></a>';
+ }else{
+   out+='<div class="home-feature-empty">Nessuna prossima gara programmata per la squadra preferita.</div>';
+ }
+ out+='</section>';
  const period=week?fmt(week.start+"T12:00:00+01:00",{day:"numeric",month:"short"})+" – "+fmt(week.end+"T12:00:00+01:00",{day:"numeric",month:"short"}):"Settimana corrente";
- out+='<div class="section-title"><h2>Le altre Virtus questa settimana</h2><a href="#calendar">Calendario</a></div><p class="intro">Lunedì–domenica · '+esc(period)+' · '+esc(others.length)+' '+(others.length===1?"partita":"partite")+'</p>';
- if(!others.length)out+='<div class="empty">Nessuna partita delle altre squadre Virtus in questa settimana.</div>';
+ out+='<div class="section-title home-week-title"><h2>Partite della settimana</h2><a href="#calendar">Calendario</a></div><p class="intro">Lunedì–domenica · '+esc(period)+' · '+esc(games.length)+' '+(games.length===1?"partita":"partite")+'</p>';
+ if(!games.length)out+='<div class="empty">Nessuna partita Virtus programmata in questa settimana.</div>';
  else{
    let previousDay="";
-   for(const game of others){
+   for(const game of games){
      const key=VirtusWeek.dateKey(game.datetime);
      if(key!==previousDay){previousDay=key;out+='<div class="date-line">'+esc(dayLong(game.datetime))+'</div>'}
      out+=matchRow(game);
@@ -137,14 +137,29 @@ function render(){
  let html=section==="calendar"?calendar():section==="standings"?standings():section==="team"?teamPage(id):section==="match"?matchPage(id):home();
  $("#view").innerHTML=html;if(S.searchOpen)renderSearch();
 }
-function openSearch(favorites=false){S.searchOpen=true;$("#search-overlay").hidden=false;$("#team-search").value="";renderSearch(favorites);setTimeout(()=>$("#team-search").focus(),50)}
-function closeSearch(){S.searchOpen=false;$("#search-overlay").hidden=true}
-function renderSearch(favorites=false){
+
+function openSearch(favorites=false){
+ S.searchOpen=true;S.favoritePicker=Boolean(favorites);
+ $("#search-overlay").hidden=false;
+ $("#search-title").textContent=S.favoritePicker?"Cambia squadra preferita":"Cerca una squadra";
+ $("#team-search").value="";
+ renderSearch();
+ setTimeout(()=>$("#team-search").focus(),50);
+}
+function closeSearch(){S.searchOpen=false;S.favoritePicker=false;$("#search-overlay").hidden=true}
+function renderSearch(){
  if(!S.data){$("#search-results").innerHTML='<div class="empty">Nessun dato disponibile.</div>';return}
  const q=$("#team-search").value.trim().toLocaleLowerCase("it");
- let arr=S.data.teams.filter(t=>(!favorites||t.isVirtus)&&(!q||[t.name,competition(t.competitionIds?.[0]).name,competition(t.competitionIds?.[0]).short].join(" ").toLocaleLowerCase("it").includes(q))).sort((a,b)=>Number(b.isVirtus)-Number(a.isVirtus)||a.name.localeCompare(b.name,"it"));
- $("#search-results").innerHTML=arr.slice(0,100).map(t=>'<a class="search-result" href="'+route("team",t.id)+'"><span class="label"><b>'+esc(t.name)+'</b><small>'+esc(competition(t.competitionIds?.[0]).short)+(t.isVirtus?" · Virtus Caserta":"")+'</small></span><span style="color:var(--gold)">›</span></a>').join("")||'<div class="empty">Nessuna squadra trovata.</div>';
+ const onlyVirtus=S.favoritePicker;
+ let arr=S.data.teams.filter(t=>(!onlyVirtus||t.isVirtus)&&(!q||[t.name,competition(t.competitionIds?.[0]).name,competition(t.competitionIds?.[0]).short].join(" ").toLocaleLowerCase("it").includes(q))).sort((a,b)=>Number(b.isVirtus)-Number(a.isVirtus)||a.name.localeCompare(b.name,"it"));
+ $("#search-results").innerHTML=arr.slice(0,100).map(t=>{
+   const opening=onlyVirtus?'<button type="button" class="search-result search-choice" data-favorite-target="'+esc(t.id)+'" aria-label="Imposta '+esc(t.name)+' come squadra preferita">':'<a class="search-result" href="'+route("team",t.id)+'">';
+   const ending=onlyVirtus?'</button>':'</a>';
+   const marker=onlyVirtus&&S.favorite===t.id?'★':'›';
+   return opening+'<span class="label"><b>'+esc(t.name)+'</b><small>'+esc(competition(t.competitionIds?.[0]).short)+(t.isVirtus?" · Virtus Caserta":"")+'</small></span><span style="color:var(--gold)">'+marker+'</span>'+ending;
+ }).join("")||'<div class="empty">Nessuna squadra trovata.</div>';
 }
+
 function events(){
  window.addEventListener("hashchange",()=>{closeSearch();render();window.scrollTo({top:0,behavior:"instant"})});
  $("#search-button").addEventListener("click",()=>openSearch());
@@ -167,7 +182,18 @@ function events(){
   if(id==="calendar-comp"){S.calendar.comp=v;render()}
   if(id==="standings-comp"){S.standings.comp=v;render()}
  });
- $("#search-results").addEventListener("click",()=>closeSearch());
+ $("#search-results").addEventListener("click",e=>{
+  const option=e.target.closest("[data-favorite-target]");
+  if(option){
+    const id=option.dataset.favoriteTarget;
+    if(!S.teamMap.get(id)?.isVirtus)return;
+    S.favorite=id;
+    try{localStorage.setItem(KEY_FAVORITE,id)}catch{}
+    closeSearch();render();toast("Squadra preferita aggiornata");
+    return;
+  }
+  if(e.target.closest("a"))closeSearch();
+ });
  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&S.data)loadData()});
  if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 }

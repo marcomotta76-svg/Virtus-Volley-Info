@@ -36,6 +36,22 @@
     }).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime)||
       String(a.id).localeCompare(String(b.id)));
   }
+
+  function allVirtusMatches(data,week){
+    if(!data||!Array.isArray(data.teams)||!Array.isArray(data.matches)||!week)return [];
+    const virtus=new Set(data.teams.filter(t=>t.isVirtus).map(t=>t.id));
+    const seen=new Set();
+    return data.matches.filter(m=>{
+      const day=dateKey(m.datetime);
+      if(!day||day<week.start||day>=week.endExclusive||
+         (!virtus.has(m.homeId)&&!virtus.has(m.awayId)))return false;
+      const key=m.id||[m.competitionId,m.datetime,m.homeId,m.awayId].join("|");
+      if(seen.has(key))return false;
+      seen.add(key);
+      return true;
+    }).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime)||
+      String(a.id).localeCompare(String(b.id)));
+  }
   function nextFavoriteMatch(data,favoriteId,now=new Date()){
     if(!favoriteId||!data||!Array.isArray(data.matches))return null;
     const cutoff=now instanceof Date?now.getTime():new Date(now).getTime();
@@ -48,7 +64,7 @@
     ).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
     return games[0]||null;
   }
-  const api=Object.freeze({dateKey,currentWeek,otherVirtusMatches,nextFavoriteMatch});
+  const api=Object.freeze({dateKey,currentWeek,otherVirtusMatches,allVirtusMatches,nextFavoriteMatch});
   root.VirtusWeek=api;
   if(typeof module==="object"&&module.exports)module.exports=api;
 })(typeof globalThis!=="undefined"?globalThis:this);
