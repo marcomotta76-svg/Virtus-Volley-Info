@@ -28,6 +28,12 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Test connettivita portali ufficiali FIPAV (diagnostico)
+        continue-on-error: true
+        run: |
+          python -m pip install requests beautifulsoup4
+          python importer/probe.py
+
       - name: Prepara il sito per GitHub Pages
         shell: bash
         run: |
