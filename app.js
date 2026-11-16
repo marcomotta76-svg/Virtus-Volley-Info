@@ -89,7 +89,7 @@ function calendar(){
 }
 function rankTable(c){
  if(!c.standings?.length)return '<div class="empty">Classifica non ancora disponibile.</div>';
- return '<table class="rank-table"><thead><tr><th>#</th><th class="name">Squadra</th><th>Pt</th><th>G</th><th>V</th><th>P</th><th>Set</th></tr></thead><tbody>'+c.standings.map(r=>'<tr class="'+(team(r.teamId).isVirtus?"virtus":"")+'"><td>'+esc(r.position??"—")+'</td><td><a href="'+route("team",r.teamId)+'">'+esc(teamName(r.teamId))+'</a></td><td class="pts">'+esc(r.points)+'</td><td>'+esc(r.played)+'</td><td>'+esc(r.wins)+'</td><td>'+esc(r.losses)+'</td><td>'+esc(r.sf)+'–'+esc(r.sa)+'</td></tr>').join("")+'</tbody></table>';
+ return '<table class="rank-table"><colgroup><col class="col-pos"><col class="col-name"><col class="col-points"><col class="col-stat"><col class="col-stat"><col class="col-stat"><col class="col-set"></colgroup><thead><tr><th>#</th><th class="name">Squadra</th><th>Pt</th><th>G</th><th>V</th><th>P</th><th>Set</th></tr></thead><tbody>'+c.standings.map(r=>'<tr class="'+(team(r.teamId).isVirtus?"virtus":"")+'"><td>'+esc(r.position??"—")+'</td><td><a class="rank-team" href="'+route("team",r.teamId)+'"><span class="rank-badge"><span class="rank-initials">'+esc(teamName(r.teamId).slice(0,2))+'</span>'+(team(r.teamId).logo?'<img class="rank-crest" src="'+esc(team(r.teamId).logo)+'" loading="lazy" alt="">':"")+'</span><span class="rank-team-name">'+esc(teamName(r.teamId))+'</span></a></td><td class="pts">'+esc(r.points)+'</td><td>'+esc(r.played)+'</td><td>'+esc(r.wins)+'</td><td>'+esc(r.losses)+'</td><td class="set-score">'+esc(r.sf)+'–'+esc(r.sa)+'</td></tr>').join("")+'</tbody></table>';
 }
 function standings(){
  const c=competition(S.standings.comp);return '<div class="eyebrow">CAMPIONATI FIPAV</div><h1 class="page-title">Classifiche</h1><p class="intro">Tocca una squadra per consultare calendario e risultati.</p><div class="filters">'+compSelect(S.standings.comp,"standings-comp")+'</div><div class="card"><div class="eyebrow">'+esc(c.short)+'</div><h2 style="margin:8px 0 12px">'+esc(c.name)+'</h2>'+rankTable(c)+'</div>'+badgeCoverage(c)+foot();
@@ -139,6 +139,7 @@ function events(){
  $("#team-search").addEventListener("input",()=>renderSearch());
  $("#clear-search").addEventListener("click",()=>{$("#team-search").value="";renderSearch()});
  document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSearch()});
+ document.addEventListener("error",e=>{if(e.target instanceof HTMLImageElement && e.target.matches(".rank-crest"))e.target.hidden=true},true);
  $("#refresh-button").addEventListener("click",()=>loadData(true));
  $("#view").addEventListener("click",e=>{
   if(e.target.closest("#change-favorite")){openSearch(true);return}
