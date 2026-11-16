@@ -2,12 +2,14 @@ name: Pubblica Volley Info Virtus Caserta
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'data.json'
   workflow_dispatch:
   schedule:
     - cron: '13 */3 * * *'
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -18,69 +20,65 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Test connettivita portali ufficiali FIPAV (diagnostico)
-        continue-on-error: true
-        run: |
-          python -m pip install requests beautifulsoup4
-          python importer/probe.py
+      - name: Installa dipendenze
+        run: python -m pip install --disable-pip-version-check requests beautifulsoup4 pillow
 
-      - name: Test collezione diretta di 9 gironi FIPAV
-        continue-on-error: true
-        timeout-minutes: 18
+      - name: Prepara gli asset della PWA
         shell: bash
         run: |
-          python -m pip install beautifulsoup4 requests
-          python -u importer/direct.py --output /tmp/virtus-direct-test.json --previous /tmp/nonexistent.json
-          python - <<'PY'
-          import json
-          d=json.load(open('/tmp/virtus-direct-test.json'))
-          print('Diretta:',len(d['competitions']),'gironi',len(d['matches']),'gare',len(d['teams']),'squadre, method:',d['provenance']['method'])
-          PY
-
-      - name: Prepara il sito per GitHub Pages
-        shell: bash
-        run: |
-          python -m pip install --disable-pip-version-check -r importer/requirements.txt pillow
           mkdir -p public/icons public/logos
-          cp index.html app.js style.css source_adapter.js sw.js manifest.webmanifest data.json public/
+          cp index.html app.js style.css sw.js manifest.webmanifest public/
           cp logos/virtus_caserta_original.png public/logos/
           python - <<'PY'
           from PIL import Image
           from pathlib import Path
-          source=Image.open('icons/icon-source.png').convert('RGBA')
-          icons=Path('public/icons')
-          for size,name in [(192,'icon-192.png'),(512,'icon-512.png'),(180,'apple-touch.png')]:
-              source.resize((size,size),Image.Resampling.LANCZOS).save(icons/name,optimize=True)
-          mask=Image.new('RGBA',(512,512),'#0b142a')
-          scaled=source.resize((385,385),Image.Resampling.LANCZOS)
-          mask.alpha_composite(scaled,((512-385)//2,(512-385)//2))
-          mask.save(icons/'icon-maskable-512.png',optimize=True)
+          src=Image.open("icons/icon-source.png").convert("RGBA")
+          out=Path("public/icons")
+          for size,name in [(192,"icon-192.png"),(512,"icon-512.png"),(180,"apple-touch.png")]:
+              src.resize((size,size),Image.Resampling.LANCZOS).save(out/name,optimize=True)
+          mask=Image.new("RGBA",(512,512),"#0b142a")
+          icon=src.resize((385,385),Image.Resampling.LANCZOS)
+          mask.alpha_composite(icon,((512-385)//2,(512-385)//2))
+          mask.save(out/"icon-maskable-512.png",optimize=True)
           PY
 
-      - name: Aggiorna il feed FIPAV
-        shell: bash
+      - name: Acquisisci direttamente da FIPAV Caserta e Campania
+        timeout-minutes: 18
         run: |
-          if python importer/sync.py --output public/data.json; then
-            echo "Feed FIPAV acquisito."
-          else
-            echo "::warning::Fonte FIPAV temporaneamente non raggiungibile. Resta l'ultima copia validata nel repository."
-          fi
+          python -u importer/direct.py --output public/data.json --previous data.json
+          python - <<'PY'
+          import json
+          p=json.load(open("public/data.json"))
+          assert p["provenance"]["method"]=="direct-fipav"
+          assert len(p["competitions"])==9 and len(p["matches"])>=180
+          print("Confermato:",len(p["matches"]),"gare dirette FIPAV, nessun feed di terzi")
+          PY
 
       - uses: actions/configure-pages@v5
-
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public
-
       - id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Conserva ultima copia verificata in GitHub
+        shell: bash
+        run: |
+          cp public/data.json data.json
+          if ! git diff --quiet -- data.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data.json
+            git commit -m "Aggiorna archivio diretto FIPAV [skip ci]"
+            git push origin HEAD:main
+          fi
