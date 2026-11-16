@@ -25,7 +25,7 @@ REGIONAL_ASSOCIATIONS={
 EDITORIAL_LOGOS={
  "PALLAVOLO TELESE":"https://www.gazzettabenevento.it/sites/default/files/styles/copertina_proporzioni_originali/public/2026-07/PALLAVOLO%20TELESE%20LOGO.jpg?itok=nG2rnaM6",
  "ELISA VOLLEY POMIGLIANO":"https://volleybox.net/media/upload/teams/big_16873002399e0mM.png",
- "ACADEMY VOLLEY FIAMMA":"https://lookaside.fbsbx.com/lookaside/crawler/media/?media_id=100054982735203",
+ "ACADEMY VOLLEY FIAMMA":"https://volleybox.net/media/upload/teams/1691847559lVmC6.png",
 }
 def valid_image(body):
     if not body or len(body)<700 or len(body)>4000000:return None
