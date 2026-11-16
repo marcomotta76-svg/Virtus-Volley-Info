@@ -61,15 +61,29 @@ function favSection(){
  const t=team(S.favorite);return '<div class="card"><div class="fav-line"><div><p class="eyebrow">LA MIA SQUADRA</p><h2 style="font-size:19px;margin:7px 0">'+esc(t.name)+'</h2><p class="intro">'+esc(competition(t.competitionIds?.[0]).short)+'</p></div><button class="action-button secondary" id="change-favorite">Cambia</button></div><a class="inline-button" href="'+route("team",t.id)+'">Apri la scheda della squadra →</a></div>'
 }
 function home(){
- const all=S.favorite?matchesFor(S.favorite):S.data.matches;
- const future=upcoming(all),old=previous(all),primary=future[0]||old[0],comp=primary?competition(primary.competitionId):null;
- let out='<div class="eyebrow">STAGIONE '+esc(S.data.season)+'</div><h1 class="page-title">La pallavolo di Caserta.</h1><p class="intro">La tua squadra, le partite e tutte le classifiche ufficiali.</p>'+favSection();
- if(primary){
- const a=team(primary.homeId),b=team(primary.awayId);
- out+='<a class="hero" style="display:block" href="'+route("match",primary.id)+'"><div class="hero-heading"><span>'+(future.length?"PROSSIMA GARA":"ULTIMA GARA")+'</span><span>'+esc(comp.short)+'</span></div><div class="hero-teams"><div class="hero-team">'+bigIcon(a.id)+'<span>'+esc(a.name)+'</span></div><div class="versus">'+(isPlayed(primary)?esc(primary.score.join(" – ")):"VS")+'</div><div class="hero-team">'+bigIcon(b.id)+'<span>'+esc(b.name)+'</span></div></div><div class="detail center">'+esc(dayLong(primary.datetime))+' · '+esc(time(primary.datetime))+'</div><div class="detail center">'+esc(venue(primary.venueId)?.name||"Palestra da definire")+'</div></a>';
+ const favorite=S.favorite&&S.teamMap.has(S.favorite)?S.favorite:null;
+ const selected=favorite?team(favorite):null;
+ const week=VirtusWeek.currentWeek(new Date());
+ const next=VirtusWeek.nextFavoriteMatch(S.data,favorite,new Date());
+ const others=VirtusWeek.otherVirtusMatches(S.data,favorite,week);
+ let out='<div class="eyebrow">STAGIONE '+esc(S.data.season)+'</div><h1 class="page-title">Le partite Virtus</h1><p class="intro">La prossima partita della squadra preferita, poi gli incontri delle altre squadre Virtus nella settimana corrente.</p>';
+ out+='<div class="section-title"><h2>Prossima partita'+(selected?' · '+esc(competition(selected.competitionIds?.[0]).short):'')+'</h2></div>';
+ if(next){
+   const a=team(next.homeId),b=team(next.awayId),comp=competition(next.competitionId);
+   out+='<a class="hero" style="display:block" href="'+route("match",next.id)+'"><div class="hero-heading"><span>LA MIA SQUADRA</span><span>'+esc(comp.short)+'</span></div><div class="hero-teams"><div class="hero-team">'+bigIcon(a.id)+'<span>'+esc(a.name)+'</span></div><div class="versus">VS</div><div class="hero-team">'+bigIcon(b.id)+'<span>'+esc(b.name)+'</span></div></div><div class="detail center">'+esc(dayLong(next.datetime))+' · '+esc(time(next.datetime))+'</div><div class="detail center">'+esc(venue(next.venueId)?.name||"Palestra da definire")+'</div></a>';
+ }else out+='<div class="empty">Nessuna prossima partita programmata per la squadra preferita.</div>';
+ out+=favSection();
+ const period=week?fmt(week.start+"T12:00:00+01:00",{day:"numeric",month:"short"})+" – "+fmt(week.end+"T12:00:00+01:00",{day:"numeric",month:"short"}):"Settimana corrente";
+ out+='<div class="section-title"><h2>Le altre Virtus questa settimana</h2><a href="#calendar">Calendario</a></div><p class="intro">Lunedì–domenica · '+esc(period)+' · '+esc(others.length)+' '+(others.length===1?"partita":"partite")+'</p>';
+ if(!others.length)out+='<div class="empty">Nessuna partita delle altre squadre Virtus in questa settimana.</div>';
+ else{
+   let previousDay="";
+   for(const game of others){
+     const key=VirtusWeek.dateKey(game.datetime);
+     if(key!==previousDay){previousDay=key;out+='<div class="date-line">'+esc(dayLong(game.datetime))+'</div>'}
+     out+=matchRow(game);
+   }
  }
- out+=pageSection("Ultimi risultati",old.slice(0,3).map(m=>matchRow(m)).join("")||'<div class="empty">Nessun risultato disponibile.</div>',"#calendar");
- out+=pageSection("Prossime gare",future.slice(primary&&future.length?1:0,4).map(m=>matchRow(m)).join("")||'<div class="empty">Nessuna gara futura disponibile.</div>',"#calendar");
  return out+foot();
 }
 function compSelect(selected,id="comp-select"){return '<select id="'+id+'" aria-label="Seleziona campionato">'+S.data.competitions.map(c=>'<option value="'+esc(c.id)+'" '+(selected===c.id?"selected":"")+'>'+esc(c.short)+'</option>').join("")+'</select>'}
