@@ -22,7 +22,7 @@ const upcoming=a=>a.filter(m=>!isPlayed(m)&&m.datetime&&new Date(m.datetime).get
 const previous=a=>a.filter(isPlayed).sort((a,b)=>(b.datetime||"").localeCompare(a.datetime||""));
 const foot=()=>S.data?'<p class="detail center">Dati FIPAV · Aggiornati '+esc(fmt(S.data.updatedAt,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))+' · Risultati non in tempo reale</p>':"";
 function assignData(d){
- if(!d||d.mode!=="official"||!Array.isArray(d.matches)||!Array.isArray(d.teams)||!Array.isArray(d.competitions)||d.matches.length<30||!d.teams.some(t=>t.isVirtus))throw Error("Archivio non valido");
+ if(!d||d.mode!=="official"||d.provenance?.method!=="direct-fipav"||!Array.isArray(d.matches)||!Array.isArray(d.teams)||!Array.isArray(d.competitions)||d.matches.length<30||!d.teams.some(t=>t.isVirtus))throw Error("Archivio non valido");
  S.data=d;S.teamMap=new Map(d.teams.map(t=>[t.id,t]));S.compMap=new Map(d.competitions.map(c=>[c.id,c]));S.matchMap=new Map(d.matches.map(m=>[m.id,m]));S.venueMap=new Map((d.venues||[]).map(v=>[v.id,v]));
  try{let id=localStorage.getItem(KEY_FAVORITE);if(id&&S.teamMap.get(id)?.isVirtus)S.favorite=id;else if(!S.favorite||!S.teamMap.has(S.favorite))S.favorite=S.data.teams.find(t=>t.isVirtus)?.id||null;localStorage.setItem(KEY_DATA,JSON.stringify(d))}catch{S.favorite=S.favorite||S.data.teams.find(t=>t.isVirtus)?.id||null}
  if(!S.standings.comp||!S.compMap.has(S.standings.comp))S.standings.comp=S.teamMap.get(S.favorite)?.competitionIds?.[0]||d.competitions[0].id;
@@ -30,25 +30,25 @@ function assignData(d){
 async function loadData(force=false){
  if(S.loading)return;S.loading=true;
  $("#refresh-button")?.setAttribute("aria-busy","true");
- let ok=false,errors=[];
+ let ok=false,error="";
  try{
-   const r=await fetch("./data.json"+(force?"?t="+Date.now():""),{cache:"no-cache"});
+   const r=await fetch("./data.json"+(force?"?t="+Date.now():""),{cache:force?"no-store":"no-cache"});
    if(!r.ok)throw Error("HTTP "+r.status);
    const d=await r.json();
-   if(d.mode!=="official")throw Error("Archivio iniziale non ancora aggiornato");
+   if(d.mode!=="official"||d.provenance?.method!=="direct-fipav")throw Error("Dati diretti FIPAV non disponibili");
    assignData(d);ok=true;
- }catch(e){errors.push(String(e.message||e))}
- try{
-   const r=await fetch(SOURCE_FEED_URL+(force?"?t="+Date.now():""),{mode:"cors",cache:force?"no-store":"default"});
-   if(!r.ok)throw Error("HTTP "+r.status);
-   const from=adaptFipavFeed(await r.json());
-   if(!S.data||Date.parse(from.updatedAt)>Date.parse(S.data.updatedAt)){assignData(from);ok=true}
- }catch(e){errors.push("Fonte diretta: "+String(e.message||e))}
- if(!ok){try{let cached=JSON.parse(localStorage.getItem(KEY_DATA)||"null");if(cached){assignData(cached);ok=true;toast("Connessione non disponibile: ultimi dati salvati")}}catch{}}
- S.loading=false;$("#refresh-button")?.removeAttribute("aria-busy");
+ }catch(e){error=String(e.message||e)}
+ if(!ok){
+   try{
+     const cached=JSON.parse(localStorage.getItem(KEY_DATA)||"null");
+     if(cached?.provenance?.method==="direct-fipav"){assignData(cached);ok=true;toast("Offline: ultimi dati FIPAV salvati")}
+   }catch{}
+ }
+ S.loading=false;
+ $("#refresh-button")?.removeAttribute("aria-busy");
  render();
- if(force)toast(ok?"Dati verificati · "+fmt(S.data.updatedAt,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"Aggiornamento non disponibile; controlla la connessione");
- if(!ok&&errors.length)console.warn("Volley Info:",errors.join(" · "));
+ if(force)toast(ok?"Dati FIPAV · "+fmt(S.data.updatedAt,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"Dati FIPAV non raggiungibili. Riprova.");
+ if(!ok&&error)console.warn("Volley Info: "+error);
 }
 function toast(message){const e=$("#toast");e.textContent=message;e.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>e.hidden=true,3600)}
 function badgeCoverage(c){return c.coverage==="partial"?'<div class="notice">Calendario parziale: la fonte FIPAV non include ancora tutte le gare delle avversarie per questo girone. La classifica rimane completa.</div>':""}
