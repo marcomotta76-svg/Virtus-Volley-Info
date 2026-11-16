@@ -59,7 +59,7 @@ def num(s):
     return int(s)
 
 def date_it(text):
-    m = re.search(r"(\d{1,2})/(\d{1,2})/(\d{2,4})(?:\s*(\d{1,2}):(\d{2}))?", clean(text))
+    m = re.search(r"(\d{1,2})/(\d{1,2})/(\d{2,4})(?:\s*(?:ore\s*)?(\d{1,2})[:.](\d{2}))?", clean(text))
     if not m:
         return None
     day, month, year = map(int, m.group(1,2,3))
