@@ -33,6 +33,36 @@ jobs:
       - name: Installa dipendenze
         run: python -m pip install --disable-pip-version-check requests beautifulsoup4 pillow
 
+
+      - name: Scarica e ottimizza il logo ufficiale Virtus HD
+        shell: bash
+        run: |
+          python - <<'PY'
+          import io
+          from pathlib import Path
+          import requests
+          from PIL import Image
+          url="https://www.virtuscaserta.com/images/negativo@4x.png"
+          target=Path("logos/virtus_caserta_hq.webp")
+          target.parent.mkdir(parents=True,exist_ok=True)
+          try:
+              r=requests.get(url,timeout=40,headers={"User-Agent":"Mozilla/5.0 (compatible; Virtus-Volley-Info/1.0)"})
+              r.raise_for_status()
+              source=Image.open(io.BytesIO(r.content))
+              if source.width<1000 or source.height<1400 or source.width/source.height>0.95:
+                  raise ValueError("Risoluzione o proporzioni non valide per il logo ufficiale")
+              image=source.convert("RGBA")
+              image.thumbnail((720,960),Image.Resampling.LANCZOS)
+              tmp=target.with_suffix(".tmp.webp")
+              image.save(tmp,"WEBP",quality=90,method=5,exact=True)
+              tmp.replace(target)
+              print("Logo ufficiale confermato",source.size,"->",image.size,"bytes",target.stat().st_size,flush=True)
+          except Exception as exc:
+              if not target.exists() or target.stat().st_size<12000:
+                  raise RuntimeError("Logo HD non disponibile e nessuna copia locale di backup: "+str(exc)) from exc
+              print("Logo ufficiale temporaneamente irraggiungibile. Uso la copia HD salvata:",exc,flush=True)
+          PY
+
       - name: Verifica calendario Home e fuso italiano
         run: node --test tests/home-week.test.cjs
 
@@ -88,12 +118,13 @@ jobs:
             git fetch origin main
             git checkout --detach origin/main
             cp public/data.json data.json
-            if git diff --quiet -- data.json; then
+            cp public/logos/virtus_caserta_hq.webp logos/virtus_caserta_hq.webp
+            git add data.json logos/virtus_caserta_hq.webp
+            if git diff --cached --quiet; then
               echo "Archivio FIPAV invariato."
               exit 0
             fi
-            git add data.json
-            git commit -m "Aggiorna archivio FIPAV con loghi verificati [skip ci]"
+            git commit -m "Aggiorna archivio FIPAV e logo Virtus HD [skip ci]"
             if git push origin HEAD:main; then
               exit 0
             fi

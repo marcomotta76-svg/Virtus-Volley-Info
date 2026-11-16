@@ -63,7 +63,7 @@ def main(path):
             found+=1
             continue
         if team.get("isVirtus"):
-            team["logo"]="logos/virtus_caserta_original.png"
+            team["logo"]="logos/virtus_caserta_hq.webp"
             continue
         sid=None
         match=re.match(r"ce-(\d+)-",team.get("sourceTeamId",""))

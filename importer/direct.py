@@ -130,7 +130,7 @@ class Collection:
         tid=f"{source}-{sid if sid is not None else 'x'}-{slug(name)}__{cid}"
         self.teams[tid]=dict(id=tid,name=name,sourceTeamId=tid.split("__")[0],
             competitionIds=[cid],isVirtus=is_virtus,
-            logo=("logos/virtus_caserta_original.png" if is_virtus else
+            logo=("logos/virtus_caserta_hq.webp" if is_virtus else
               f"{BASE_CE}/mngArea/Societa/img/{sid}/Loghi/LogoS{sid}.png" if sid else None))
         return tid
     def ce_team(self,cid,cell):
@@ -363,7 +363,7 @@ def run(output,prior_path):
     updated=datetime.now(TZ).replace(microsecond=0).isoformat()
     data=dict(version=2,mode="official",season=STAGIONE,updatedAt=updated,
         club=dict(name="VIRTUS CASERTA",shortName="Virtus Caserta",
-            city="Caserta",logo="logos/virtus_caserta_original.png"),
+            city="Caserta",logo="logos/virtus_caserta_hq.webp"),
         competitions=list(c.comps.values()),teams=list(c.teams.values()),
         venues=list(c.venues.values()),matches=sorted(c.matches.values(),key=lambda m:(m.get("datetime") or "9999",m["id"])),
         provenance=dict(source=DATA_SOURCE,method="direct-fipav",

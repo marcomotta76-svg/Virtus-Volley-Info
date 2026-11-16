@@ -111,7 +111,7 @@ function standings(){
 function teamPage(id){
  const t=S.teamMap.get(id);if(!t)return '<div class="empty">Squadra non trovata.</div>';
  const c=competition(t.competitionIds?.[0]),r=c.standings?.find(x=>x.teamId===id),list=matchesFor(id),future=upcoming(list),old=previous(list);
- let out='<a class="inline-button" href="#home">← Home</a><div class="card"><div class="eyebrow">'+esc(c.short)+'</div><div class="fav-line"><div><h1 class="page-title" style="font-size:24px">'+esc(t.name)+'</h1><p class="intro">'+esc(c.name)+' · '+esc(c.group)+'</p></div>'+bigIcon(t.id)+'</div>'+(t.isVirtus?'<button id="set-favorite" data-team="'+esc(t.id)+'" class="action-button">'+(S.favorite===t.id?"★ Squadra preferita":"☆ Imposta come preferita")+'</button>':"")+'</div>';
+ let out='<a class="inline-button" href="#home">← Home</a><div class="card"><div class="eyebrow">'+esc(c.short)+'</div><div class="fav-line"><div><h1 class="page-title" style="font-size:24px">'+esc(t.name)+'</h1><p class="intro">'+esc(c.name)+' · '+esc(c.group)+'</p></div><div class="team-profile-logo">'+bigIcon(t.id)+'</div></div>'+(t.isVirtus?'<button id="set-favorite" data-team="'+esc(t.id)+'" class="action-button">'+(S.favorite===t.id?"★ Squadra preferita":"☆ Imposta come preferita")+'</button>':"")+'</div>';
  out+='<div class="meta-grid">'+[['Posizione',r?.position??"—"],['Punti',r?.points??"—"],['Gare',r?.played??"—"]].map(([k,v])=>'<div class="meta-stat"><strong>'+esc(v)+'</strong><span>'+esc(k)+'</span></div>').join("")+'</div>';
  out+=badgeCoverage(c);
  out+=pageSection("Prossima partita",future[0]?matchRow(future[0]):'<div class="empty">Nessuna gara futura disponibile.</div>');

@@ -19,3 +19,10 @@
 .home-week-title{margin-top:24px}
 .search-choice{width:100%;color:var(--text);text-align:left;cursor:pointer}
 @media(max-width:360px){.home-change-button{padding:7px 8px;font-size:11px}.home-feature-category{font-size:11px}}
+
+/* Stemma ufficiale Virtus: resa nitida su schermi ad alta densita. */
+.team-profile-logo{flex:0 0 122px;width:122px;height:150px;display:flex;align-items:center;justify-content:center}
+.team-profile-logo img{display:block;width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 3px 4px #0007)}
+.hero-team img,.brand img{image-rendering:auto;filter:drop-shadow(0 2px 3px #0007)}
+@media(max-width:480px){.team-profile-logo{flex-basis:106px;width:106px;height:135px}}
+@media(max-width:345px){.team-profile-logo{flex-basis:90px;width:90px;height:120px}}

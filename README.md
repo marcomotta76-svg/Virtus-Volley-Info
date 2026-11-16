@@ -41,3 +41,7 @@ Un giro diretto completo di test del 16 novembre 2026 ha trovato 9 gironi, 60 sq
 L'importazione dipende dai portali ufficiali FIPAV, che possono modificare il formato delle pagine. Le richieste sono sequenziali e limitate; non sono effettuate da ogni smartphone. La classifica è letta dai siti FIPAV, non ricalcolata da dati eventualmente incompleti.
 
 L'app non richiede login, non contiene chat, convocazioni, registrazioni o scouting.
+
+## Logo Virtus in alta definizione
+
+La PWA usa `logos/virtus_caserta_hq.webp` ottenuto dal PNG ufficiale `https://www.virtuscaserta.com/images/negativo@4x.png` (1732x2310 pixel), scalato in WebP trasparente con alta qualità. GitHub Actions ne controlla risoluzione e proporzioni; dopo la prima pubblicazione salva una copia nel repository e la riutilizza se il sito ufficiale non è momentaneamente raggiungibile. Il vecchio PNG a risoluzione ridotta non viene più utilizzato nella UI.
