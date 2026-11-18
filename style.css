@@ -26,3 +26,9 @@
 .hero-team img,.brand img{image-rendering:auto;filter:drop-shadow(0 2px 3px #0007)}
 @media(max-width:480px){.team-profile-logo{flex-basis:106px;width:106px;height:135px}}
 @media(max-width:345px){.team-profile-logo{flex-basis:90px;width:90px;height:120px}}
+
+/* Dimensioni robuste per il logo HD nelle schede squadra. */
+.team-profile-logo{box-sizing:border-box;min-width:0;min-height:0;overflow:hidden!important}
+.team-profile-image-box{display:block;min-width:0;min-height:0;max-width:100%;max-height:100%;overflow:hidden}
+.team-profile-image{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center!important}
+@media(max-width:360px){.team-profile-logo{flex-basis:88px!important;width:88px!important;max-width:88px!important;height:112px!important;max-height:112px!important}}
