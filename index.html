@@ -54,6 +54,24 @@
         <div id="search-results" class="search-results" aria-live="polite"></div>
       </div>
     </div>
+    <div id="refresh-overlay" class="refresh-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="refresh-title">
+      <section class="refresh-panel">
+        <div class="refresh-heading">
+          <div><p class="eyebrow">DATI FIPAV</p><h2 id="refresh-title">Aggiorna i risultati</h2></div>
+          <button type="button" class="icon-button" id="refresh-close" aria-label="Chiudi aggiornamento">×</button>
+        </div>
+        <p id="refresh-last" class="refresh-last">Caricamento dello stato dati…</p>
+        <button type="button" class="action-button refresh-check" id="refresh-check">Controlla i dati pubblicati</button>
+        <div class="refresh-admin">
+          <h3>Aggiornamento straordinario</h3>
+          <p>Per avviare una nuova raccolta direttamente dai portali FIPAV occorre essere gestore del repository GitHub.</p>
+          <a class="action-button secondary refresh-github-link" id="refresh-open-github" href="https://github.com/marcomotta76-svg/Virtus-Volley-Info/actions/workflows/pages.yml" target="_blank" rel="noopener noreferrer">Apri raccolta FIPAV su GitHub</a>
+          <p class="refresh-instructions">Su GitHub premi <strong>Run workflow</strong>, poi di nuovo <strong>Run workflow</strong>. Torna qui: l'app controllerà la nuova pubblicazione.</p>
+        </div>
+        <p id="refresh-status" class="refresh-status" role="status" aria-live="polite"></p>
+        <button id="refresh-stop" class="inline-button" type="button" hidden>Interrompi il controllo</button>
+      </section>
+    </div>
     <div class="toast" role="status" aria-live="polite" id="toast" hidden></div>
   </div>
   <script src="week.js" defer></script>
