@@ -63,8 +63,10 @@ jobs:
               print("Logo ufficiale temporaneamente irraggiungibile. Uso la copia HD salvata:",exc,flush=True)
           PY
 
-      - name: Verifica calendario Home e fuso italiano
-        run: node --test tests/home-week.test.cjs
+      - name: Verifica JS, calendario e aggiornamenti straordinari
+        run: |
+          node --check app.js
+          node --test tests/*.test.cjs
 
       - name: Prepara gli asset della PWA
         shell: bash
