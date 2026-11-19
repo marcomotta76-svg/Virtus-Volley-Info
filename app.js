@@ -27,7 +27,7 @@ function assignData(d){
  try{let id=localStorage.getItem(KEY_FAVORITE);if(id&&S.teamMap.get(id)?.isVirtus)S.favorite=id;else if(!S.favorite||!S.teamMap.has(S.favorite))S.favorite=S.data.teams.find(t=>t.isVirtus)?.id||null;localStorage.setItem(KEY_DATA,JSON.stringify(d))}catch{S.favorite=S.favorite||S.data.teams.find(t=>t.isVirtus)?.id||null}
  if(!S.standings.comp||!S.compMap.has(S.standings.comp))S.standings.comp=S.teamMap.get(S.favorite)?.competitionIds?.[0]||d.competitions[0].id;
 }
-async function loadData(force=false){
+async function loadData(force=false,silent=false){
  if(S.loading)return;
  S.loading=true;
  const button=$("#refresh-button");
@@ -57,7 +57,7 @@ async function loadData(force=false){
  button?.removeAttribute("aria-busy");
  button?.removeAttribute("disabled");
  render();
- if(force){
+ if(force&&!silent){
    const timestamp=S.data?.updatedAt?fmt(S.data.updatedAt,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"non disponibile";
    if(fetched&&changed)toast("Nuovi dati pubblicati · "+timestamp);
    else if(fetched)toast("Nessun dato più recente · Ultimo aggiornamento: "+timestamp);
@@ -65,6 +65,8 @@ async function loadData(force=false){
    else toast("Dati FIPAV non raggiungibili. Riprova.");
  }
  if(error)console.warn("Volley Info: "+error);
+ updateRefreshMeta();
+ return {fetched,changed,error,updatedAt:S.data?.updatedAt||null};
 }
 function toast(message){const e=$("#toast");e.textContent=message;e.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>e.hidden=true,3600)}
 function badgeCoverage(c){return c.coverage==="partial"?'<div class="notice">Calendario parziale: la fonte FIPAV non include ancora tutte le gare delle avversarie per questo girone. La classifica rimane completa.</div>':""}
