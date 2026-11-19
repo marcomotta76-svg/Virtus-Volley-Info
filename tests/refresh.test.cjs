@@ -30,7 +30,7 @@ test("Monitor pubblicazione controlla timestamp senza dichiarare un avvio inesis
   assert.match(app,/Su GitHub premi Run workflow e conferma/);
 });
 test("Aggiornamento PWA include pagina HTML e JS versionati",()=>{
-  assert.match(html,/style\.css\?v=10/);
-  assert.match(html,/app\.js\?v=10/);
-  assert.match(sw,/virtus-volley-info-today-v10/);
+  assert.match(html,/style\.css\?v=11/);
+  assert.match(html,/app\.js\?v=11/);
+  assert.match(sw,/virtus-volley-info-update-v11/);
 });

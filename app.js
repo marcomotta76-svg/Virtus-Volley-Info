@@ -270,6 +270,33 @@ function startRefreshMonitor(){
  refreshStatus("Su GitHub premi Run workflow e conferma. Torna nell'app: controllerò la nuova pubblicazione per 12 minuti.");
  refreshMonitor.timer=setInterval(pollRequestedRefresh,REFRESH_INTERVAL_MS);
 }
+
+/* Controlla l'aggiornamento PWA anche quando torna in primo piano.
+   Con un nuovo Service Worker attivo ricarica una sola volta l'interfaccia
+   (non i dati utente, che restano in localStorage). */
+function setupServiceWorker(){
+ if(!("serviceWorker" in navigator))return;
+ let reloaded=false,lastCheck=0;
+ navigator.serviceWorker.addEventListener("controllerchange",()=>{
+   if(reloaded)return;
+   reloaded=true;
+   window.location.reload();
+ });
+ navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).then(reg=>{
+   const check=()=>{
+     if(document.visibilityState==="hidden")return;
+     const now=Date.now();
+     if(now-lastCheck<60000)return;
+     lastCheck=now;
+     reg.update().catch(()=>{});
+   };
+   check();
+   document.addEventListener("visibilitychange",check);
+   window.addEventListener("pageshow",check);
+   // Consente l'aggiornamento anche se la PWA resta aperta a lungo.
+   setInterval(check,30*60*1000);
+ }).catch(()=>{});
+}
 function events(){
  window.addEventListener("hashchange",()=>{closeSearch();render();window.scrollTo({top:0,behavior:"instant"})});
  $("#search-button").addEventListener("click",()=>openSearch());
@@ -314,6 +341,6 @@ function events(){
    if(refreshMonitor.active)pollRequestedRefresh();
    else if(S.data)loadData();
  });
- if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+ setupServiceWorker();
 }
 events();loadData();

@@ -66,6 +66,7 @@ jobs:
       - name: Verifica JS, calendario e aggiornamenti straordinari
         run: |
           node --check app.js
+          node --check sw.js
           node --test tests/*.test.cjs
 
       - name: Prepara gli asset della PWA
