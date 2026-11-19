@@ -52,6 +52,17 @@
     }).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime)||
       String(a.id).localeCompare(String(b.id)));
   }
+  // Separa le gare gia' selezionate per la settimana senza duplicarle.
+  // Il giorno di oggi si calcola in Europe/Rome, mai col fuso del dispositivo.
+  function partitionTodayMatches(games,now=new Date()){
+    const todayKey=dateKey(now);
+    const today=[],other=[];
+    for(const game of Array.isArray(games)?games:[]){
+      if(todayKey&&dateKey(game.datetime)===todayKey)today.push(game);
+      else other.push(game);
+    }
+    return {today,other};
+  }
   function nextFavoriteMatch(data,favoriteId,now=new Date()){
     if(!favoriteId||!data||!Array.isArray(data.matches))return null;
     const cutoff=now instanceof Date?now.getTime():new Date(now).getTime();
@@ -64,7 +75,7 @@
     ).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
     return games[0]||null;
   }
-  const api=Object.freeze({dateKey,currentWeek,otherVirtusMatches,allVirtusMatches,nextFavoriteMatch});
+  const api=Object.freeze({dateKey,currentWeek,otherVirtusMatches,allVirtusMatches,partitionTodayMatches,nextFavoriteMatch});
   root.VirtusWeek=api;
   if(typeof module==="object"&&module.exports)module.exports=api;
 })(typeof globalThis!=="undefined"?globalThis:this);

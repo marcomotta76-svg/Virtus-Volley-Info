@@ -55,3 +55,48 @@ test("La stessa gara tra due squadre Virtus compare una sola volta",()=>{
  const result=week.allVirtusMatches(repeated,week.currentWeek("2026-11-18T08:00:00Z"));
  assert.equal(result.filter(g=>g.id==="two-virtus").length,1);
 });
+
+test("Oggi in campo: include tutte le Virtus, la favorita e gare gia disputate; le altre restano in settimana",()=>{
+ const now="2026-11-19T13:00:00Z";
+ const games=week.allVirtusMatches(data,week.currentWeek(now));
+ const result=week.partitionTodayMatches(games,now);
+ assert.deepEqual(result.today.map(x=>x.id),["fav-involved"]);
+ assert.deepEqual(result.other.map(x=>x.id),["v2s","two-virtus","f2","v3s"]);
+ assert.equal(result.today.some(x=>x.id==="non-virtus"),false);
+ assert.equal(result.today.length+result.other.length,games.length);
+});
+test("Oggi in campo: tutte le gare giocate conservano risultati e nessuna viene duplicata",()=>{
+ const today="2026-11-19T12:00:00Z";
+ const augmented={...data,matches:[...data.matches,
+  {id:"finished",homeId:"v3",awayId:"opp",datetime:"2026-11-19T15:30:00+01:00",status:"played",score:[3,2],sets:[[25,18],[25,27],[25,20],[23,25],[15,12]]},
+  {id:"finished",homeId:"v3",awayId:"opp",datetime:"2026-11-19T15:30:00+01:00",status:"played",score:[3,2]}
+ ]};
+ const games=week.allVirtusMatches(augmented,week.currentWeek(today));
+ const {today:now,other}=week.partitionTodayMatches(games,today);
+ assert.deepEqual(now.map(x=>x.id),["finished","fav-involved"]);
+ assert.deepEqual(now[0].score,[3,2]);
+ assert.equal(now[0].sets.length,5);
+ assert.equal(new Set([...now,...other].map(x=>x.id)).size,games.length);
+});
+test("Europe/Rome, giorno dopo mezzanotte e passaggio ora legale",()=>{
+ const games=[
+  {id:"yesterday",datetime:"2026-11-19T22:59:59Z"},
+  {id:"today",datetime:"2026-11-19T23:00:00Z"},
+  {id:"later",datetime:"2026-11-20T23:00:00Z"}
+ ];
+ const result=week.partitionTodayMatches(games,"2026-11-19T23:30:00Z");
+ assert.deepEqual(result.today.map(x=>x.id),["today"]);
+ assert.deepEqual(result.other.map(x=>x.id),["yesterday","later"]);
+ const dst=week.partitionTodayMatches([
+  {id:"sun",datetime:"2026-03-29T21:59:59Z"},
+  {id:"mon",datetime:"2026-03-29T22:00:00Z"}
+ ],"2026-03-29T22:00:01Z");
+ assert.deepEqual(dst.today.map(x=>x.id),["mon"]);
+});
+test("Senza partite odierne non altera le partite della settimana",()=>{
+ const games=week.allVirtusMatches(data,week.currentWeek("2026-11-20T12:00:00Z"));
+ const {today,other}=week.partitionTodayMatches(games,"2026-11-20T12:00:00Z");
+ assert.deepEqual(today,[]);
+ assert.deepEqual(other.map(x=>x.id),games.map(x=>x.id));
+ assert.deepEqual(week.partitionTodayMatches(null).today,[]);
+});

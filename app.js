@@ -79,9 +79,11 @@ function pageSection(title,body,link){return '<div class="section-title"><h2>'+t
 function home(){
  const favorite=S.favorite&&S.teamMap.has(S.favorite)?S.favorite:null;
  const selected=favorite?team(favorite):null;
- const week=VirtusWeek.currentWeek(new Date());
- const next=VirtusWeek.nextFavoriteMatch(S.data,favorite,new Date());
+ const now=new Date();
+ const week=VirtusWeek.currentWeek(now);
+ const next=VirtusWeek.nextFavoriteMatch(S.data,favorite,now);
  const games=VirtusWeek.allVirtusMatches(S.data,week);
+ const {today:todayGames,other:otherGames}=VirtusWeek.partitionTodayMatches(games,now);
  let out='<section class="hero home-feature" aria-label="Squadra preferita e prossima gara">';
  out+='<div class="home-feature-toolbar"><div class="home-feature-meta"><span class="home-feature-kicker">LA MIA SQUADRA</span>'+(selected?'<span class="home-feature-category">'+esc(competition(selected.competitionIds?.[0]).short)+'</span>':'')+'</div><button type="button" class="home-change-button" id="change-favorite" aria-label="Cambia squadra preferita">Cambia squadra</button></div>';
  if(next){
@@ -91,12 +93,21 @@ function home(){
    out+='<div class="home-feature-empty">Nessuna prossima gara programmata per la squadra preferita.</div>';
  }
  out+='</section>';
+ // Opzione 2: le gare di oggi sono raggruppate e ben visibili, anche se giocate.
+ // Conserviamo matchRow per risultati, orari, collegamenti e loghi invariati.
+ if(todayGames.length){
+   out+='<section class="today-match-panel" aria-label="Partite Virtus di oggi"><div class="today-match-heading"><div class="today-match-heading-main"><span class="today-match-kicker">OGGI IN CAMPO</span><span class="today-match-date">'+esc(fmt(now,{weekday:"long",day:"numeric",month:"long"}))+'</span></div><span class="today-match-count">'+esc(todayGames.length)+' '+(todayGames.length===1?"PARTITA":"PARTITE")+'</span></div>';
+   for(const game of todayGames)out+=matchRow(game);
+   out+='</section>';
+ }
+ const remainingGames=todayGames.length?otherGames:games;
  const period=week?fmt(week.start+"T12:00:00+01:00",{day:"numeric",month:"short"})+" – "+fmt(week.end+"T12:00:00+01:00",{day:"numeric",month:"short"}):"Settimana corrente";
- out+='<div class="section-title home-week-title"><h2>Partite della settimana</h2><a href="#calendar">Calendario</a></div><p class="intro">Lunedì–domenica · '+esc(period)+' · '+esc(games.length)+' '+(games.length===1?"partita":"partite")+'</p>';
- if(!games.length)out+='<div class="empty">Nessuna partita Virtus programmata in questa settimana.</div>';
+ const weekHeading=todayGames.length?"Altre partite della settimana":"Partite della settimana";
+ out+='<div class="section-title home-week-title"><h2>'+weekHeading+'</h2><a href="#calendar">Calendario</a></div><p class="intro">Lunedì–domenica · '+esc(period)+' · '+esc(remainingGames.length)+' '+(remainingGames.length===1?"partita":"partite")+'</p>';
+ if(!remainingGames.length)out+='<div class="empty">'+(todayGames.length?"Nessun’altra partita Virtus in questa settimana.":"Nessuna partita Virtus programmata in questa settimana.")+'</div>';
  else{
    let previousDay="";
-   for(const game of games){
+   for(const game of remainingGames){
      const key=VirtusWeek.dateKey(game.datetime);
      if(key!==previousDay){previousDay=key;out+='<div class="date-line">'+esc(dayLong(game.datetime))+'</div>'}
      out+=matchRow(game);
