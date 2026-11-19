@@ -178,6 +178,87 @@ function renderSearch(){
  }).join("")||'<div class="empty">Nessuna squadra trovata.</div>';
 }
 
+
+/* GitHub Pages non può avviare workflow senza autenticazione.
+   Il link richiede l'accesso del gestore; la PWA verifica solo l'archivio pubblicato.
+   Nessuna credenziale GitHub deve mai essere inserita nel browser pubblico. */
+const refreshMonitor={timer:null,active:false,checking:false,baseline:null,startedAt:0};
+const REFRESH_INTERVAL_MS=20000;
+const REFRESH_MAX_WAIT_MS=12*60*1000;
+function refreshStatus(message){
+ const el=$("#refresh-status");
+ if(el)el.textContent=message;
+}
+function updateRefreshMeta(){
+ const last=$("#refresh-last");
+ if(!last)return;
+ last.textContent=S.data?.updatedAt
+   ?"Ultima raccolta FIPAV pubblicata: "+fmt(S.data.updatedAt,{day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit"})
+   :"Nessun archivio FIPAV ancora disponibile.";
+}
+function stopRefreshMonitor(message){
+ if(refreshMonitor.timer)clearInterval(refreshMonitor.timer);
+ refreshMonitor.timer=null;
+ refreshMonitor.active=false;
+ refreshMonitor.checking=false;
+ $("#refresh-stop").hidden=true;
+ if(message)refreshStatus(message);
+}
+function closeRefreshPanel(){
+ $("#refresh-overlay").hidden=true;
+ stopRefreshMonitor();
+ $("#refresh-button")?.focus();
+}
+async function checkPublishedRefresh(){
+ if(S.loading)return;
+ refreshStatus("Controllo dei dati pubblicati...");
+ const status=await loadData(true,true);
+ if(!status)return;
+ const date=S.data?.updatedAt?fmt(S.data.updatedAt,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"sconosciuta";
+ if(status.fetched&&status.changed)refreshStatus("Dati pubblicati più recenti caricati: "+date);
+ else if(status.fetched)refreshStatus("Nessun dato più recente. Ultima pubblicazione: "+date);
+ else if(S.data)refreshStatus("Connessione non disponibile: restano i dati salvati del "+date);
+ else refreshStatus("Impossibile verificare i dati. Riprova.");
+}
+function openRefreshPanel(){
+ if(S.searchOpen)closeSearch();
+ $("#refresh-overlay").hidden=false;
+ updateRefreshMeta();
+ refreshStatus("Controllo la versione dei dati attualmente pubblicata.");
+ $("#refresh-check")?.focus();
+ checkPublishedRefresh();
+}
+async function pollRequestedRefresh(){
+ if(!refreshMonitor.active||refreshMonitor.checking||S.loading||document.visibilityState==="hidden")return;
+ if(Date.now()-refreshMonitor.startedAt>REFRESH_MAX_WAIT_MS){
+   stopRefreshMonitor("Nessuna nuova pubblicazione rilevata entro 12 minuti. Verifica l'esito del workflow su GitHub.");
+   return;
+ }
+ refreshMonitor.checking=true;
+ try{
+   const result=await loadData(true,true);
+   if(!refreshMonitor.active||!result)return;
+   const updated=Date.parse(result.updatedAt||"");
+   const original=Date.parse(refreshMonitor.baseline||"1970-01-01");
+   if(result.fetched&&Number.isFinite(updated)&&updated>original){
+     stopRefreshMonitor("Nuova raccolta FIPAV pubblicata e caricata nell'app!");
+     toast("Nuovi risultati FIPAV disponibili");
+   }else if(!result.fetched){
+     refreshStatus("Non riesco a controllare la pubblicazione. Riproverò automaticamente.");
+   }else{
+     refreshStatus("Nessuna nuova pubblicazione rilevata. Se hai avviato Run workflow su GitHub, il controllo continua automaticamente.");
+   }
+ }finally{refreshMonitor.checking=false}
+}
+function startRefreshMonitor(){
+ stopRefreshMonitor();
+ refreshMonitor.baseline=S.data?.updatedAt||null;
+ refreshMonitor.startedAt=Date.now();
+ refreshMonitor.active=true;
+ $("#refresh-stop").hidden=false;
+ refreshStatus("Su GitHub premi Run workflow e conferma. Torna nell'app: controllerò la nuova pubblicazione per 12 minuti.");
+ refreshMonitor.timer=setInterval(pollRequestedRefresh,REFRESH_INTERVAL_MS);
+}
 function events(){
  window.addEventListener("hashchange",()=>{closeSearch();render();window.scrollTo({top:0,behavior:"instant"})});
  $("#search-button").addEventListener("click",()=>openSearch());
