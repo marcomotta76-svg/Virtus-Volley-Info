@@ -28,27 +28,43 @@ function assignData(d){
  if(!S.standings.comp||!S.compMap.has(S.standings.comp))S.standings.comp=S.teamMap.get(S.favorite)?.competitionIds?.[0]||d.competitions[0].id;
 }
 async function loadData(force=false){
- if(S.loading)return;S.loading=true;
- $("#refresh-button")?.setAttribute("aria-busy","true");
- let ok=false,error="";
+ if(S.loading)return;
+ S.loading=true;
+ const button=$("#refresh-button");
+ button?.setAttribute("aria-busy","true");
+ button?.setAttribute("disabled","true");
+ const prior=S.data?.updatedAt||null;
+ let fetched=false,changed=false,error=null;
  try{
-   const r=await fetch("./data.json"+(force?"?t="+Date.now():""),{cache:force?"no-store":"no-cache"});
-   if(!r.ok)throw Error("HTTP "+r.status);
-   const d=await r.json();
-   if(d.mode!=="official"||d.provenance?.method!=="direct-fipav")throw Error("Dati diretti FIPAV non disponibili");
-   assignData(d);ok=true;
- }catch(e){error=String(e.message||e)}
- if(!ok){
+   const response=await fetch("./data.json"+(force?"?nocache="+Date.now():""),{cache:force?"no-store":"no-cache"});
+   if(!response.ok)throw Error("HTTP "+response.status);
+   const d=await response.json();
+   if(d.mode!=="official"||d.provenance?.method!=="direct-fipav")throw Error("Archivio FIPAV non valido");
+   const currentTime=Date.parse(prior||"1970-01-01");
+   const incomingTime=Date.parse(d.updatedAt);
+   if(!Number.isFinite(incomingTime))throw Error("Data dell'archivio non valida");
+   if(prior&&incomingTime<currentTime)throw Error("Archivio remoto meno recente");
+   changed=!prior||incomingTime>currentTime;
+   assignData(d);fetched=true;
+ }catch(ex){error=String(ex.message||ex)}
+ if(!fetched&&!S.data){
    try{
      const cached=JSON.parse(localStorage.getItem(KEY_DATA)||"null");
-     if(cached?.provenance?.method==="direct-fipav"){assignData(cached);ok=true;toast("Offline: ultimi dati FIPAV salvati")}
+     if(cached?.provenance?.method==="direct-fipav")assignData(cached);
    }catch{}
  }
  S.loading=false;
- $("#refresh-button")?.removeAttribute("aria-busy");
+ button?.removeAttribute("aria-busy");
+ button?.removeAttribute("disabled");
  render();
- if(force)toast(ok?"Dati FIPAV · "+fmt(S.data.updatedAt,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"Dati FIPAV non raggiungibili. Riprova.");
- if(!ok&&error)console.warn("Volley Info: "+error);
+ if(force){
+   const timestamp=S.data?.updatedAt?fmt(S.data.updatedAt,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"non disponibile";
+   if(fetched&&changed)toast("Nuovi dati pubblicati · "+timestamp);
+   else if(fetched)toast("Nessun dato più recente · Ultimo aggiornamento: "+timestamp);
+   else if(S.data)toast("Verifica non riuscita. Visualizzi i dati salvati del "+timestamp);
+   else toast("Dati FIPAV non raggiungibili. Riprova.");
+ }
+ if(error)console.warn("Volley Info: "+error);
 }
 function toast(message){const e=$("#toast");e.textContent=message;e.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>e.hidden=true,3600)}
 function badgeCoverage(c){return c.coverage==="partial"?'<div class="notice">Calendario parziale: la fonte FIPAV non include ancora tutte le gare delle avversarie per questo girone. La classifica rimane completa.</div>':""}
