@@ -266,9 +266,14 @@ function events(){
  $("#search-overlay").addEventListener("click",e=>{if(e.target.id==="search-overlay")closeSearch()});
  $("#team-search").addEventListener("input",()=>renderSearch());
  $("#clear-search").addEventListener("click",()=>{$("#team-search").value="";renderSearch()});
- document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSearch()});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeSearch();if(!$("#refresh-overlay").hidden)closeRefreshPanel()}});
  document.addEventListener("error",e=>{if(e.target instanceof HTMLImageElement && e.target.matches(".rank-crest"))e.target.hidden=true},true);
- $("#refresh-button").addEventListener("click",()=>loadData(true));
+ $("#refresh-button").addEventListener("click",openRefreshPanel);
+ $("#refresh-close").addEventListener("click",closeRefreshPanel);
+ $("#refresh-overlay").addEventListener("click",e=>{if(e.target.id==="refresh-overlay")closeRefreshPanel()});
+ $("#refresh-check").addEventListener("click",checkPublishedRefresh);
+ $("#refresh-open-github").addEventListener("click",startRefreshMonitor);
+ $("#refresh-stop").addEventListener("click",()=>stopRefreshMonitor("Controllo interrotto. Gli aggiornamenti automatici continuano normalmente."));
  $("#view").addEventListener("click",e=>{
   if(e.target.closest("#change-favorite")){openSearch(true);return}
   const fav=e.target.closest("#set-favorite");if(fav){S.favorite=fav.dataset.team;try{localStorage.setItem(KEY_FAVORITE,S.favorite)}catch{};toast("Squadra preferita aggiornata");render();return}
@@ -293,7 +298,11 @@ function events(){
   }
   if(e.target.closest("a"))closeSearch();
  });
- document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&S.data)loadData()});
+ document.addEventListener("visibilitychange",()=>{
+   if(document.visibilityState!=="visible")return;
+   if(refreshMonitor.active)pollRequestedRefresh();
+   else if(S.data)loadData();
+ });
  if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 }
 events();loadData();
