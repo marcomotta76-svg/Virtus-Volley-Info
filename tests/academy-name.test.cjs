@@ -44,11 +44,11 @@ test("Altre squadre mantengono classi e layout correnti",()=>{
  assert.doesNotMatch(card,/match-team-academy|home-match-played|DISPUTATA/);
  assert.match(card,/20:15/);
 });
-test("Regole responsive solo Academy; versioni PWA coerenti",()=>{
+test("Regole responsive Academy fino a 410px; versioni PWA coerenti",()=>{
  assert.match(css,/@media\(max-width:425px\)\{\s*\.match-team-academy\{font-size:12px/);
- assert.match(css,/@media\(max-width:380px\)\{\s*\.match-team-academy\{font-size:11\.5px;gap:4px/);
+ assert.match(css,/@media\(max-width:410px\)\{\s*\.match-team-academy\{font-size:11\.5px;gap:4px/);
  assert.match(css,/@media\(max-width:330px\)\{\s*\.match-team-academy\{font-size:10px/);
- assert.match(html,/app\.js\?v=13/);
- assert.match(html,/style\.css\?v=13/);
- assert.match(sw,/virtus-volley-info-academy-v13/);
+ assert.match(html,/app\.js\?v=14/);
+ assert.match(html,/style\.css\?v=14/);
+ assert.match(sw,/virtus-volley-info-academy-v14/);
 });

@@ -97,7 +97,7 @@
 @media(max-width:425px){
  .match-team-academy{font-size:12px;letter-spacing:-.025em}
 }
-@media(max-width:380px){
+@media(max-width:410px){
  .match-team-academy{font-size:11.5px;gap:4px}
  .match-team-academy img,
  .match-team-academy .small-logo{width:23px;height:23px}

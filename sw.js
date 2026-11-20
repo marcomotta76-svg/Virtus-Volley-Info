@@ -1,9 +1,9 @@
-/* Virtus Volley Info PWA v13.
+/* Virtus Volley Info PWA v14.
    HTML, CSS e JavaScript: network-first; offline: ultima copia valida.
    Dati FIPAV: network-first, cache canonica singola senza query di refresh.
    Icone e stemmi: cache-first con fallback rete.
    Limitiamo l'eliminazione alle cache di questa PWA. */
-const CACHE_NAME="virtus-volley-info-academy-v13";
+const CACHE_NAME="virtus-volley-info-academy-v14";
 const CACHE_PREFIX="virtus-volley-info-";
 const SHELL=["./","./index.html","./style.css","./app.js","./week.js","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png","./logos/virtus_caserta_hq.webp"];
 const DATA_URL=new URL("./data.json",self.registration.scope).toString();
