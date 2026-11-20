@@ -72,8 +72,10 @@ function toast(message){const e=$("#toast");e.textContent=message;e.hidden=false
 function badgeCoverage(c){return c.coverage==="partial"?'<div class="notice">Calendario parziale: la fonte FIPAV non include ancora tutte le gare delle avversarie per questo girone. La classifica rimane completa.</div>':""}
 function matchRow(m,tag=true,highlightPlayed=false){
  const c=competition(m.competitionId),a=team(m.homeId),b=team(m.awayId);
+ const academyA=a.name.trim().toUpperCase()==="VIRTUS CASERTA ACADEMY";
+ const academyB=b.name.trim().toUpperCase()==="VIRTUS CASERTA ACADEMY";
  const completedHome=highlightPlayed&&isPlayed(m)&&m.score.length===2&&m.score.every(v=>Number.isInteger(v)&&v>=0);
- return '<a class="match-row'+(completedHome?' home-match-played':'')+'" href="'+route("match",m.id)+'"><div class="row-top"><span>'+esc(tag?c.short:"Giornata "+(m.round||"—"))+'</span><span>'+(completedHome?'<span class="home-match-badge">DISPUTATA</span>':'')+esc(day(m.datetime))+'</span></div><div class="match-body"><div class="match-team">'+iconTeam(a.id)+'<span>'+esc(a.name)+'</span></div><div class="match-center">'+(isPlayed(m)?esc(m.score.join(" – ")):'<small>'+esc(time(m.datetime))+'</small>')+'</div><div class="match-team">'+iconTeam(b.id)+'<span>'+esc(b.name)+'</span></div></div></a>';
+ return '<a class="match-row'+(completedHome?' home-match-played':'')+'" href="'+route("match",m.id)+'"><div class="row-top"><span>'+esc(tag?c.short:"Giornata "+(m.round||"—"))+'</span><span>'+(completedHome?'<span class="home-match-badge">DISPUTATA</span>':'')+esc(day(m.datetime))+'</span></div><div class="match-body"><div class="match-team'+(academyA?' match-team-academy':'')+'">'+iconTeam(a.id)+'<span>'+esc(a.name)+'</span></div><div class="match-center">'+(isPlayed(m)?esc(m.score.join(" – ")):'<small>'+esc(time(m.datetime))+'</small>')+'</div><div class="match-team'+(academyB?' match-team-academy':'')+'">'+iconTeam(b.id)+'<span>'+esc(b.name)+'</span></div></div></a>';
 }
 function pageSection(title,body,link){return '<div class="section-title"><h2>'+title+'</h2>'+(link?'<a href="'+link+'">Vedi tutti</a>':"")+'</div>'+body}
 
