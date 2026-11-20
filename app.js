@@ -70,9 +70,10 @@ async function loadData(force=false,silent=false){
 }
 function toast(message){const e=$("#toast");e.textContent=message;e.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>e.hidden=true,3600)}
 function badgeCoverage(c){return c.coverage==="partial"?'<div class="notice">Calendario parziale: la fonte FIPAV non include ancora tutte le gare delle avversarie per questo girone. La classifica rimane completa.</div>':""}
-function matchRow(m,tag=true){
+function matchRow(m,tag=true,highlightPlayed=false){
  const c=competition(m.competitionId),a=team(m.homeId),b=team(m.awayId);
- return '<a class="match-row" href="'+route("match",m.id)+'"><div class="row-top"><span>'+esc(tag?c.short:"Giornata "+(m.round||"—"))+'</span><span>'+esc(day(m.datetime))+'</span></div><div class="match-body"><div class="match-team">'+iconTeam(a.id)+'<span>'+esc(a.name)+'</span></div><div class="match-center">'+(isPlayed(m)?esc(m.score.join(" – ")):'<small>'+esc(time(m.datetime))+'</small>')+'</div><div class="match-team">'+iconTeam(b.id)+'<span>'+esc(b.name)+'</span></div></div></a>';
+ const completedHome=highlightPlayed&&isPlayed(m)&&m.score.length===2&&m.score.every(v=>Number.isInteger(v)&&v>=0);
+ return '<a class="match-row'+(completedHome?' home-match-played':'')+'" href="'+route("match",m.id)+'"><div class="row-top"><span>'+esc(tag?c.short:"Giornata "+(m.round||"—"))+'</span><span>'+(completedHome?'<span class="home-match-badge">DISPUTATA</span>':'')+esc(day(m.datetime))+'</span></div><div class="match-body"><div class="match-team">'+iconTeam(a.id)+'<span>'+esc(a.name)+'</span></div><div class="match-center">'+(isPlayed(m)?esc(m.score.join(" – ")):'<small>'+esc(time(m.datetime))+'</small>')+'</div><div class="match-team">'+iconTeam(b.id)+'<span>'+esc(b.name)+'</span></div></div></a>';
 }
 function pageSection(title,body,link){return '<div class="section-title"><h2>'+title+'</h2>'+(link?'<a href="'+link+'">Vedi tutti</a>':"")+'</div>'+body}
 
@@ -97,7 +98,7 @@ function home(){
  // Conserviamo matchRow per risultati, orari, collegamenti e loghi invariati.
  if(todayGames.length){
    out+='<section class="today-match-panel" aria-label="Partite Virtus di oggi"><div class="today-match-heading"><div class="today-match-heading-main"><span class="today-match-kicker">OGGI IN CAMPO</span><span class="today-match-date">'+esc(fmt(now,{weekday:"long",day:"numeric",month:"long"}))+'</span></div><span class="today-match-count">'+esc(todayGames.length)+' '+(todayGames.length===1?"PARTITA":"PARTITE")+'</span></div>';
-   for(const game of todayGames)out+=matchRow(game);
+   for(const game of todayGames)out+=matchRow(game,true,true);
    out+='</section>';
  }
  const remainingGames=todayGames.length?otherGames:games;
@@ -110,7 +111,7 @@ function home(){
    for(const game of remainingGames){
      const key=VirtusWeek.dateKey(game.datetime);
      if(key!==previousDay){previousDay=key;out+='<div class="date-line">'+esc(dayLong(game.datetime))+'</div>'}
-     out+=matchRow(game);
+     out+=matchRow(game,true,true);
    }
  }
  return out+foot();

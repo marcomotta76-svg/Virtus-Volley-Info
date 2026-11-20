@@ -11,12 +11,12 @@ test("Home presenta il pannello OGGI IN CAMPO prima delle altre gare",()=>{
  assert.ok(home.includes("today-match-panel"));
  assert.ok(home.includes("Altre partite della settimana"));
  assert.ok(home.indexOf("today-match-panel")<home.indexOf("Altre partite della settimana"));
- assert.ok(home.includes("for(const game of todayGames)out+=matchRow(game)"));
+ assert.ok(home.includes("for(const game of todayGames)out+=matchRow(game,true,true)"));
  assert.ok(home.includes("for(const game of remainingGames)"));
  assert.ok(home.includes("VirtusWeek.partitionTodayMatches(games,now)"));
 });
 test("La presentazione dei risultati resta quella gia usata in tutte le pagine",()=>{
- assert.match(app,/function matchRow\(m,tag=true\)/);
+ assert.match(app,/function matchRow\(m,tag=true,highlightPlayed=false\)/);
  assert.match(app,/isPlayed\(m\)\?esc\(m.score.join\(" – "\)\)/);
  assert.match(css,/\.today-match-panel \.match-row\{/);
  assert.match(week,/function partitionTodayMatches\(games,now=new Date\(\)\)/);

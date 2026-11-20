@@ -56,18 +56,18 @@ function createWorker(){
  };
  return {lifecycle,serve,tables,offline(value){offline=value},requests(){return requests}};
 }
-test("Versione JS e CSS esplicita: asset mobile v11",()=>{
- assert.match(html,/style\.css\?v=11/);
- assert.match(html,/app\.js\?v=11/);
- assert.match(html,/week\.js\?v=11/);
- assert.match(sw,/virtus-volley-info-update-v11/);
+test("Versione JS e CSS esplicita: asset mobile v12",()=>{
+ assert.match(html,/style\.css\?v=12/);
+ assert.match(html,/app\.js\?v=12/);
+ assert.match(html,/week\.js\?v=12/);
+ assert.match(sw,/virtus-volley-info-completed-v12/);
 });
 test("Aggiornamento PWA: controlla la rete prima della cache per JS e HTML",async()=>{
  const worker=createWorker();
  await worker.lifecycle("install");
- const first=(await worker.serve(SCOPE+"app.js?v=11")).clone();
+ const first=(await worker.serve(SCOPE+"app.js?v=12")).clone();
  const firstText=await first.text();
- const secondText=await (await worker.serve(SCOPE+"app.js?v=11")).text();
+ const secondText=await (await worker.serve(SCOPE+"app.js?v=12")).text();
  assert.notEqual(firstText,secondText,"App JS non deve rimanere bloccato in cache");
  const html1=await (await worker.serve(SCOPE+"index.html")).text();
  const html2=await (await worker.serve(SCOPE+"index.html")).text();
@@ -78,10 +78,10 @@ test("Offline: mantiene asset installati e archivio dati senza consumare cache i
  await worker.lifecycle("install");
  await worker.serve(SCOPE+"data.json?nocache=111");
  await worker.serve(SCOPE+"data.json?nocache=222");
- const cache=worker.tables.get("virtus-volley-info-update-v11");
+ const cache=worker.tables.get("virtus-volley-info-completed-v12");
  assert.equal(cache.keys().filter(k=>k.includes("/data.json")).length,1,"Solo una cache canonica per i dati");
  worker.offline(true);
- const js=await worker.serve(SCOPE+"app.js?v=11");
+ const js=await worker.serve(SCOPE+"app.js?v=12");
  assert.ok((await js.text()).startsWith("response-"),"JS recuperato offline da precache");
  const data=await worker.serve(SCOPE+"data.json?nocache=333");
  assert.ok((await data.text()).startsWith("response-"),"Dati FIPAV recuperati offline");
